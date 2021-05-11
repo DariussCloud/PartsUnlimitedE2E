@@ -5,8 +5,7 @@ import locale
 import pytz
 from tkinter import *
 from tkinter import messagebox
-from tkinter import colorchooser
-from tkinter import filedialog
+
 
 
 root = Tk()
@@ -29,26 +28,26 @@ def calculadora():
     acc.grid_remove()
     
 
-    a = Label(root, text="\nNumero 1",font=("Arial Bold", 10)).grid(row=3, column=0, padx=5, pady=5)
-    b = Entry(root, justify=CENTER, textvariable=n1).grid(row=4, column=0, padx=5, pady=5)
+    Label(root, text="\nNumero 1",font=("Arial Bold", 10)).grid(row=3, column=0, padx=5, pady=5)
+    Entry(root, justify=CENTER, textvariable=n1).grid(row=4, column=0, padx=5, pady=5)
 
-    c = Label(root, justify=CENTER, textvariable = sig).grid(row=4, column=1, padx=5, pady=5, ipadx=5, sticky="w")
+    Label(root, justify=CENTER, textvariable = sig).grid(row=4, column=1, padx=5, pady=5, ipadx=5, sticky="w")
     
     
-    d = Label(root, text="\n           Numero 2",font=("Arial Bold", 10)).grid(row=3, column=1, padx=5, pady=5)
-    e = Entry(root, justify=CENTER, textvariable=n2).grid(row=4, column=1, padx=5, pady=5, sticky="e")
+    Label(root, text="\n           Numero 2",font=("Arial Bold", 10)).grid(row=3, column=1, padx=5, pady=5)
+    Entry(root, justify=CENTER, textvariable=n2).grid(row=4, column=1, padx=5, pady=5, sticky="e")
 
-    f = Label(root, text="\nResultado",font=("Arial Bold", 10)).grid(row=3, column=2, padx=5, pady=5)
-    g = Entry(root, justify=CENTER, state=DISABLED, textvariable=r).grid(row=4, column=2, padx=5, pady=5, sticky="e")
+    Label(root, text="\nResultado",font=("Arial Bold", 10)).grid(row=3, column=2, padx=5, pady=5)
+    Entry(root, justify=CENTER, state=DISABLED, textvariable=r).grid(row=4, column=2, padx=5, pady=5, sticky="e")
 
     
-    h = Button(root, text="+", command=sumar,font=("Arial Bold", 10)).grid(row=3,column=3, padx=5, pady=5, sticky="w", ipadx=8, ipady=5)
-    i = Button(root, text="-", command=restar,font=("Arial Bold", 10)).grid(row=3,column=4, padx=5, pady=5, sticky="e", ipadx=8, ipady=5)
-    j = Button(root, text="*", command=multiplicar,font=("Arial Bold", 10)).grid(row=4,column=3, padx=5, pady=5, sticky="w", ipadx=8, ipady=5)
-    k = Button(root, text="/", command=dividir,font=("Arial Bold", 10)).grid(row=4,column=4, padx=5, pady=5, sticky="e", ipadx=8, ipady=5)
-    l = Button(root, text="Ver los logs", command=logs,font=("Arial Bold", 10)).grid(row=3,column=5, padx=5, pady=5, sticky="w")
-    m = Button(root, text="Salir", command=salir,font=("Arial Bold", 10)).grid(row=4,column=5, padx=5, pady=5, sticky="w")
-    n = Button(root, text="⪻", command=remove,font=("Arial Bold", 10)).grid(row=4,column=5, padx=5, pady=5, sticky="e")
+    Button(root, text="+", command=sumar,font=("Arial Bold", 10)).grid(row=3,column=3, padx=5, pady=5, sticky="w", ipadx=8, ipady=5)
+    Button(root, text="-", command=restar,font=("Arial Bold", 10)).grid(row=3,column=4, padx=5, pady=5, sticky="e", ipadx=8, ipady=5)
+    Button(root, text="*", command=multiplicar,font=("Arial Bold", 10)).grid(row=4,column=3, padx=5, pady=5, sticky="w", ipadx=8, ipady=5)
+    Button(root, text="/", command=dividir,font=("Arial Bold", 10)).grid(row=4,column=4, padx=5, pady=5, sticky="e", ipadx=8, ipady=5)
+    Button(root, text="Ver los logs", command=logs,font=("Arial Bold", 10)).grid(row=3,column=5, padx=5, pady=5, sticky="w")
+    Button(root, text="Salir", command=salir,font=("Arial Bold", 10)).grid(row=4,column=5, padx=5, pady=5, sticky="w")
+    Button(root, text="⪻", command=remove,font=("Arial Bold", 10)).grid(row=4,column=5, padx=5, pady=5, sticky="e")
     
     
 
@@ -152,7 +151,7 @@ def logs():
         strtexto = convertirTupla(a)
         asd += strtexto
         Label(root, text=asd).grid()
-    """
+        """
     
     asd = ""
     for log in cursor.execute('''SELECT * FROM logs''').fetchall():
