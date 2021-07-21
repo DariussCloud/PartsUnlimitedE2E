@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jul 16 06:59:56 2021
-
 @author: dockt
 """
 
@@ -17,9 +16,9 @@ from tkinter import filedialog
 
 
 root = Tk()
-n1 = StringVar()
-n2 = StringVar()
-r = StringVar()
+n1 = DoubleVar()
+n2 = DoubleVar()
+r = DoubleVar()
 locale.setlocale(locale.LC_ALL, 'es-MX')
 dt = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
 fecha = dt.strftime("%A %d %B %Y")
@@ -86,7 +85,7 @@ def borrar():
     n2.set('')
 def sumar():
     try:
-        r.set(float( n1.get() ) + float(n2.get() ) )
+        r.set( n1.get()  + n2.get() ) 
         global operacion
         operacion = "+"
         commit()
@@ -100,7 +99,7 @@ def sumar():
         
 def restar():
     try:
-        r.set( float( n1.get() ) - float(n2.get() ) )
+        r.set(  n1.get()  - n2.get() )
         global operacion
         operacion = "-"
         commit()
@@ -113,7 +112,7 @@ def restar():
 
 def multiplicar():
     try:
-        r.set( float( n1.get() ) * float(n2.get() ) )
+        r.set(  n1.get() ) * n2.get() 
         global operacion
         operacion = "*"
         commit()
@@ -126,7 +125,7 @@ def multiplicar():
 
 def dividir():
     try:
-        r.set( float( n1.get() ) / float(n2.get() ) )
+        r.set(  n1.get()  / n2.get() ) 
         global operacion
         operacion = "/"
         commit()
@@ -139,14 +138,26 @@ def dividir():
 def crearCuenta():
     Usr = entryUsr.get()
     Pass = str(entryPass.get())
-    
-    if len(Usr) == 0 or len(Pass) == 0:
-        return mesg.set("Los campos son obligatorios")
-    else:
-        data = [Usr, Pass]
-        cursor.execute("""INSERT INTO usuarios VALUES (?,?)""",data)
-        conexion.commit()
-        mesg.set("Cuenta creada!")
+    try:
+        cursor.execute('SELECT * FROM usuarios WHERE nombre='+ entryUsr.get())
+    except:
+        if cursor.fetchone():
+            return mesg.set("El nombre de usuario ya esta en uso")
+        elif len(Usr) == 0 or len(Pass) == 0:
+            return mesg.set("Los campos son obligatorios")
+        elif len(Usr) < 4:
+            return mesg.set("El nombre de usuario es muy corto\nMinimo 4 caracteres")
+        elif len(Usr) > 16:
+            return mesg.set("El nombre de usuario es muy largo\nMaximo 16 caracteres")
+        elif len(Pass) < 4:
+            return mesg.set("La contraseña es muy corta\nMinimo 4 caracteres")
+        elif len(Pass) > 16:
+            return mesg.set("La contraseña es muy larga\nMaximo 16 caracteres")
+        else:
+            data = [Usr, Pass]
+            cursor.execute("""INSERT INTO usuarios VALUES (?,?)""",data)
+            conexion.commit()
+            mesg.set("Cuenta creada!")
 
 def salirAplicacion():
     

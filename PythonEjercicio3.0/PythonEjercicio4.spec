@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(['PythonEjercicio4.py'],
-             pathex=['C:\\Users\\dockt\\OneDrive - Alee\\proyectos\\PythonEjercicio4'],
+             pathex=['C:\\Users\\dockt\\OneDrive - Alee\\Desktop\\PythonEjercicio3.0'],
              binaries=[],
              datas=[],
              hiddenimports=[],
