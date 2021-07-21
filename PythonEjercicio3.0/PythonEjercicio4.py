@@ -12,7 +12,8 @@ import tkinter
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
-from tkinter import filedialog
+from tkcalendar import Calendar
+
 
 
 root = Tk()
@@ -21,7 +22,7 @@ n2 = DoubleVar()
 r = DoubleVar()
 locale.setlocale(locale.LC_ALL, 'es-MX')
 dt = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-fecha = dt.strftime("%A %d %B %Y")
+fecha = dt.strftime("%d/%m/%y")
 hora =  dt.strftime("%I:%M:%S")
 conexion = sqlite3.connect("PythonEjercicio.db")
 cursor = conexion.cursor()
@@ -79,7 +80,7 @@ def calculadora():
     
     salr = Button(root, text="Salir", command=salirAplicacion,font=("Arial Bold", 10))
     salr .grid(row=4,column=5, padx=5, pady=5, sticky="w")
-
+    entryNum.focus()
 def borrar():
     n1.set('')
     n2.set('')
@@ -95,6 +96,9 @@ def sumar():
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
         texto.set("Error-\nNo se puede dividir entre cero!")
+    except:
+        texto.set("Error-\ningresa los campos correctamente")
+        
         
         
 def restar():
@@ -108,7 +112,9 @@ def restar():
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
-        texto.set("Error-\nNo se puede dividir entre cero!")      
+        texto.set("Error-\nNo se puede dividir entre cero!")     
+    except:
+        texto.set("Error-\ningresa los campos correctamente") 
 
 def multiplicar():
     try:
@@ -121,7 +127,9 @@ def multiplicar():
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
-        texto.set("Error-\nNo se puede dividir entre cero!")    
+        texto.set("Error-\nNo se puede dividir entre cero!")
+    except:
+        texto.set("Error-\ningresa los campos correctamente")   
 
 def dividir():
     try:
@@ -134,30 +142,35 @@ def dividir():
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
-        texto.set("Error-\nNo se puede dividir entre cero!")       
+        texto.set("Error-\nNo se puede dividir entre cero!")
+    except:
+        texto.set("Error-\ningresa los campos correctamente")       
+
+
+
 def crearCuenta():
     Usr = entryUsr.get()
-    Pass = str(entryPass.get())
-    try:
-        cursor.execute('SELECT * FROM usuarios WHERE nombre='+ entryUsr.get())
-    except:
-        if cursor.fetchone():
-            return mesg.set("El nombre de usuario ya esta en uso")
-        elif len(Usr) == 0 or len(Pass) == 0:
-            return mesg.set("Los campos son obligatorios")
-        elif len(Usr) < 4:
-            return mesg.set("El nombre de usuario es muy corto\nMinimo 4 caracteres")
-        elif len(Usr) > 16:
-            return mesg.set("El nombre de usuario es muy largo\nMaximo 16 caracteres")
-        elif len(Pass) < 4:
-            return mesg.set("La contraseña es muy corta\nMinimo 4 caracteres")
-        elif len(Pass) > 16:
-            return mesg.set("La contraseña es muy larga\nMaximo 16 caracteres")
-        else:
+    Pass = entryPass.get()
+
+    if len(Usr) == 0 or len(Pass) == 0:
+        return mesg.set("Los campos son obligatorios")
+    elif len(Usr) < 4:
+        return mesg.set("El nombre de usuario es muy corto\nMinimo 4 caracteres")
+    elif len(Usr) > 16:
+        return mesg.set("El nombre de usuario es muy largo\nMaximo 16 caracteres")
+    elif len(Pass) < 4:
+        return mesg.set("La contraseña es muy corta\nMinimo 4 caracteres")
+    elif len(Pass) > 16:
+        return mesg.set("La contraseña es muy larga\nMaximo 16 caracteres")
+    else:
+        try:
             data = [Usr, Pass]
-            cursor.execute("""INSERT INTO usuarios VALUES (?,?)""",data)
+            cursor.execute("""INSERT INTO usuarios VALUES (NUll,?,?)""",data)
             conexion.commit()
             mesg.set("Cuenta creada!")
+        except:
+            return mesg.set("El nombre de usuario\nya esta en uso")
+            
 
 def salirAplicacion():
     
@@ -256,14 +269,15 @@ def inicio():
     global sal
     sal = Button(root, text="Salir", command=salirAplicacion,font=("Arial Bold", 10))
     sal.grid(row=7, padx=5, pady=5)
-    
-    
+    entryUsr.focus()
     
 def ConexionBDU():
     try:
         cursor.execute('''CREATE TABLE "usuarios"  
-                        ("nombre"	VARCHAR(100) NOT NULL,
-                        "contraseña"	VARCHAR(100) NOT NULL)''') 
+                        ("ID"	INTEGER NOT NULL UNIQUE,
+                        "nombre"	VARCHAR(16) NOT NULL,
+                        "contraseña"	VARCHAR(16) NOT NULL,
+                        PRIMARY KEY("ID" AUTOINCREMENT))''') 
 
         
         cursor.execute("""CREATE TABLE "logs" (
@@ -282,8 +296,7 @@ def ConexionBDU():
         conexion.commit()
 
     except:
-        messagebox.showwarning("¡Atención!","Ya estas conectado\na la base de datos")
-    
+        pass
 def ventanaDeDatos():
     global datos
     cursor.execute("SELECT * FROM logs")
@@ -324,10 +337,11 @@ def ventanaDeDatos():
     tree.column("#8", anchor=tkinter.CENTER, width=125)
     
     tree.heading("#8", text="Fecha")
+
     menubar=Menu(datos)
     menuOpciones=Menu(menubar, tearoff=0)
 
-    menuOpciones.add_command(label="Actualizar", command=actualizarHojaDeDatos)
+    menuOpciones.add_command(label="actualizar", command=actualizarHojaDeDatos)
     menuOpciones.add_command(label="Salir", command=salirHojaDeDatos)
     menubar.add_cascade(label="Opciones", menu=menuOpciones)
 
@@ -344,60 +358,97 @@ def actualizarHojaDeDatos():
 
     
 def crearRegistro():
-    if e2.get() and e3.get() and e4.get() and  e5.get() and e6.get() and e7.get() and e8.get():
-        datos=e2.get(),e3.get(),e4.get(),e5.get(),e6.get(),e7.get(),e8.get()
-        cursor.execute("INSERT INTO logs VALUES(NULL,?,?,?,?,?,?,?)", (datos))
-        conexion.commit()
-        messagebox.showinfo("BBDD","Registro insertado con éxito")
-    else:
+    result()
+    try:
+        if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
+            datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
+            cursor.execute("INSERT INTO logs VALUES(NULL,?,?,?,?,?,?,?)", (datos))
+            conexion.commit()
+            messagebox.showinfo("BBDD","Registro insertado con éxito")
+        else:
+            messagebox.showerror("Error-", "Introduce todos los campos!")
+    except:
         messagebox.showerror("Error-", "Introduce todos los campos!")
 
-def actualizar():
-    try:
-        cursor.execute('''SELECT * FROM logs WHERE ID=''' + e1.get())
-        if cursor.fetchone():
-            datos=e2.get(),e3.get(),e4.get(),e5.get(),e6.get(),e7.get(),e8.get()
-            cursor.execute("UPDATE logs SET Numero1=?, Operacion=?, Numero2=?, Resultado=?, Usuario=?, Fecha=?, Hora=? "+
-            "WHERE ID=" + e1.get(),(datos))
-            conexion.commit()
-            messagebox.showinfo("BBDD","Registro actualizado con éxito")
+def result():
+    global resultadoAuto
+    if e3.get() == " + ":
+        resultadoAuto = float(e2.get()) + float(e4.get())
+        if resultadoAuto != float(e5.get()):
+            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
         else:
-            messagebox.showerror("Error-", "El dato no existe")
+            pass
+    elif e3.get() == " - ":
+        resultadoAuto = float(e2.get()) - float(e4.get())
+        if resultadoAuto != float(e5.get()):
+            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+        else:
+            pass
+    elif e3.get() == " x ":
+        resultadoAuto = float(e2.get()) * float(e4.get())
+        if resultadoAuto != float(e5.get()):
+            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+        else:
+            pass
+    elif e3.get() == " / ":
+        resultadoAuto = float(e2.get()) / float(e4.get())
+        if resultadoAuto != float(e5.get()):
+            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+        else:
+            pass
 
-    except:
+
+def actualizar():
+    result()
+    if e1.get():    
+        if e2.get().isdigit() and e4.get().isdigit():
+            cursor.execute("SELECT * FROM usuarios WHERE ID="+ e1.get())
+            if cursor.fetchone() != None:
+                 messagebox.showerror("Error-", "El indice no existe!")
+            else:
+                if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
+                    datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
+                    cursor.execute("UPDATE logs SET Numero1=?, Operacion=?, Numero2=?, Resultado=?, Usuario=?, Hora=?, Fecha=? "+
+                    "WHERE ID=" + e1.get(),(datos))
+                    conexion.commit()
+                    messagebox.showinfo("BBDD","Registro actualizado con éxito")
+                else:
+                    messagebox.showerror("Error-", "Introduce todos los campos!")
+        else:
+            messagebox.showerror("Error-", "Introduce bien los campos!")
+    else:
         messagebox.showerror("Error-", "Introduce el indice\nque quieres actualizar!")
 
-    
-
-
 def borrarDatos():
-    try:
-    
-        cursor.execute('''SELECT * FROM logs WHERE ID=''' + e1.get())
-    except:
-        messagebox.showerror("Error-", "Introduce el indice\nque quieres eliminar!")
-    if cursor.fetchone():
-        cursor.execute("DELETE FROM logs WHERE ID=" + e1.get())
-        conexion.commit()
-        messagebox.showinfo("BBDD","Registro borrado con éxito")
+    if e1.get():
+        try:
+            cursor.execute('''SELECT * FROM logs WHERE ID=''' + e1.get())
+            cursor.execute("DELETE FROM logs WHERE ID=" + e1.get())
+            conexion.commit()
+            messagebox.showinfo("BBDD","Registro borrado con éxito")
+        except:
+            messagebox.showerror("Error-", "El registro\nno existe")
     else:
-        messagebox.showerror("Error-", "El dato no existe")
-    
+        messagebox.showerror("Error-", "Introduce el indice\nque quieres eliminar!")
+
+
+
+
 def CRUD():
+    usrList = [usr for usr in cursor.execute("SELECT nombre FROM usuarios")]
     global raiz
     raiz = tkinter.Tk()
     raiz.geometry("275x300")
     raiz.title("CRUD")
     raiz.resizable(0, 0)
-    inf=Label(raiz, text="Editor de datos",font=("Arial Bold", 10))
-    inf.grid(column=1, row=0)
+    Label(raiz, text="   Editor de datos",font=("Arial Bold", 10)).grid(column=1, row=0, sticky="w")
     menubar=Menu(raiz)
     menuSalir=Menu(menubar, tearoff=0)
     crud=Menu(menubar, tearoff=0)
 
     crud.add_command(label="Añadir", command=crear)
     crud.add_command(label="Leer", command=ventanaDeDatos)
-    crud.add_command(label="Actualizar", command=actualizar)
+    crud.add_command(label="actualizar", command=actualizar)
     crud.add_command(label="Borrar", command=borrar)
     menubar.add_cascade(label="CRUD", menu=crud)
 
@@ -411,7 +462,7 @@ def CRUD():
     
     global e1
     e1=Entry(raiz)
-    e1.grid(column=1, row=2, sticky="e")
+    e1.grid(column=1, row=2, sticky="w")
     
     global l2
     l2=Label(raiz, text="Numero1:",font=("Arial Bold", 10))
@@ -419,15 +470,15 @@ def CRUD():
     
     global e2
     e2=Entry(raiz)
-    e2.grid(column=1, row=3, sticky="e")
+    e2.grid(column=1, row=3, sticky="w")
     
     global l3
     l3=Label(raiz, text="Operacion:",font=("Arial Bold", 10))
     l3.grid(column=0, row=4, sticky="e")
     
     global e3
-    e3=Entry(raiz)
-    e3.grid(column=1, row=4, sticky="e")
+    e3=ttk.Combobox(raiz, justify="center",width=3,state="readonly", values=[" + ", " - ", " x ", " / "])
+    e3.grid(column=1, row=4, sticky="w")
     
     global l4
     l4=Label(raiz, text="Numero2:",font=("Arial Bold", 10))
@@ -435,7 +486,7 @@ def CRUD():
     
     global e4
     e4=Entry(raiz)
-    e4.grid(column=1, row=5, sticky="e")
+    e4.grid(column=1, row=5, sticky="w")
     
     global l5
     l5=Label(raiz, text="Resultado:",font=("Arial Bold", 10))
@@ -443,30 +494,27 @@ def CRUD():
     
     global e5
     e5=Entry(raiz)
-    e5.grid(column=1, row=6, sticky="e")
+    e5.grid(column=1, row=6, sticky="w")
     
     global l6
     l6=Label(raiz, text="Usuario:",font=("Arial Bold", 10))
     l6.grid(column=0, row=7, sticky="e")
 
     global e6
-    e6=Entry(raiz)
-    e6.grid(column=1, row=7, sticky="e")
+    e6=ttk.Combobox(raiz, justify="left",width=10,state="readonly")
+    e6['values']=usrList
+    e6.grid(column=1, row=7, sticky="w")
     
     global l7
     l7=Label(raiz, text="Hora:",font=("Arial Bold", 10))
     l7.grid(column=0, row=8, sticky="e")
-    
-    global e7
-    e7=Entry(raiz)
-    e7.grid(column=1, row=8, sticky="e")
     
     global l8
     l8=Label(raiz, text="Fecha:",font=("Arial Bold", 10))
     l8.grid(column=0, row=9, sticky="e")
     
     global e8
-    e8=Entry(raiz)
+    e8=Button(raiz, text=" Selecciona una fecha ", command=calendario,font=("Arial Bold", 10))
     e8.grid(column=1, row=9, sticky="e")
     
     b1=Button(raiz, text="Create", command=crearRegistro,font=("Arial Bold", 10))
@@ -484,8 +532,66 @@ def CRUD():
     b6=Button(raiz, text="Exit", command=salirAplicacion,font=("Arial Bold", 10))
     b6.place(x=209,y=242)
 
+    b7=Button(raiz, text="Seleccionar hora", command=selHora,font=("Arial Bold", 10))
+    b7.grid(column=1, row=8, sticky="w")
+    
+    e1.focus()
+    raiz.mainloop()  
 
-    raiz.mainloop()    
+def selHora():
+    global newTime
+    def salirHora():
+        global newTime
+        newTime = laHora.get() + ":" + losMinutos.get() + ":" + segundos.get()
+        ventanaHora.destroy()
+        print(newTime)
+    ventanaHora = tkinter.Tk()
+    ventanaHora.title("Hora")
+    Label(ventanaHora, text="Hora",font=("Arial Bold", 10)).grid()
+    laHora = Spinbox(ventanaHora,from_=0,to=23,wrap=True,width=25,justify=CENTER, xscrollcommand=True)
+    laHora.grid()
+
+    Label(ventanaHora, text="Minutos",font=("Arial Bold", 10)).grid()
+    losMinutos = Spinbox(ventanaHora,from_=0,to=59,wrap=True,width=25, justify=CENTER)
+    losMinutos.grid()
+
+    Label(ventanaHora, text="Segundos",font=("Arial Bold", 10)).grid()
+    segundos = Spinbox(ventanaHora,from_=0,to=59,wrap=True,width=25, justify=CENTER)
+    segundos.grid()
+    Button(ventanaHora, text="  Confirmar  ", command=salirHora,font=("Arial Bold", 10)).grid(pady=5)
+
+
+ 
+    ventanaHora.resizable(0,0)
+    ventanaHora.config(cursor="plus",relief="ridge",bd=15)
+    ventanaHora.mainloop()
+
+
+
+
+def calendario():
+    global fecha 
+    fecha = tkinter.Tk()
+    fecha.title("Fecha")
+    fecha.geometry("282x255")
+    global newDate
+
+    cal = Calendar(fecha, selectmode = 'day',
+                year = 2021, month = 7,
+                day = 19)
+    
+    cal.grid(row=0 , column=0)
+    def salirCalendario():
+        global newDate
+        newDate = cal.get_date()
+        fecha.destroy()
+    Button(fecha, text = "    Confirmar    ",
+        command = salirCalendario,font=("Arial Bold", 10)).grid(pady=5)
+
+    fecha.config(cursor="plus",relief="ridge",bd=15)
+    fecha.resizable(0,0)
+    fecha.mainloop() 
+
 inicio()
 root.mainloop() 
 conexion.close()
