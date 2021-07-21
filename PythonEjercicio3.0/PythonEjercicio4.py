@@ -292,7 +292,6 @@ def ConexionBDU():
         PRIMARY KEY("ID" AUTOINCREMENT)
         )""")
         
-        messagebox.showinfo("BBDD","La base de datos creado con exito")
         conexion.commit()
 
     except:
