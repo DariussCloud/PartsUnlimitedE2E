@@ -363,7 +363,7 @@ def actualizarHojaDeDatos():
 
     
 def crearRegistro():
-    if e2.get().isdigit() and e4.get().isdigit():
+    if e2.get().isdigit() and e4.get().isdigit() and e5.get().isdigit():
         result()
         try:
             if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
@@ -389,7 +389,7 @@ def result():
         else:
             resultadoAuto = float(e5.get())
     if e3.get() == " - ":
-        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+        if float(e2.get()) - float(e4.get()) != float(e5.get()):
             valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
             if valor == "yes":
                 resultadoAuto = float(e2.get()) - float(e4.get())
@@ -398,7 +398,7 @@ def result():
         else:
             resultadoAuto = float(e5.get())
     if e3.get() == " x ":
-        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+        if float(e2.get()) * float(e4.get()) != float(e5.get()):
             valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
             if valor == "yes":
                 resultadoAuto = float(e2.get()) * float(e4.get())
@@ -407,7 +407,7 @@ def result():
         else:
             resultadoAuto = float(e5.get())
     if e3.get() == " / ":
-        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+        if float(e2.get()) / float(e4.get()) != float(e5.get()):
             valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
             if valor == "yes":
                 resultadoAuto = float(e2.get()) / float(e4.get())
@@ -419,22 +419,24 @@ def result():
 
 def actualizar():
     if e1.get():    
-        if e2.get().isdigit() and e4.get().isdigit():
+        if e2.get().isdigit() and e4.get().isdigit() and e5.get().isdigit():
             result()
             cursor.execute("SELECT * FROM usuarios WHERE ID="+ e1.get())
             if cursor.fetchone() != None:
                  messagebox.showerror("Error-", "El indice no existe!")
             else:
+                print(bool(e2.get()),bool(e3.get()),bool(e4.get()),bool(resultadoAuto),bool(e6.get()),bool(newTime),bool(newDate) )
                 if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
+                    
                     datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
                     cursor.execute("UPDATE logs SET Numero1=?, Operacion=?, Numero2=?, Resultado=?, Usuario=?, Hora=?, Fecha=? "+
                     "WHERE ID=" + e1.get(),(datos))
                     conexion.commit()
                     messagebox.showinfo("BBDD","Registro actualizado con éxito")
                 else:
-                    messagebox.showerror("Error-", "Introduce todos los campos!")
+                    messagebox.showerror("Error-", "Introduce todos los campos!3")
         else:
-            messagebox.showerror("Error-", "Introduce bien los campos!")
+            messagebox.showerror("Error-", "Introduce bien los campos!2")
     else:
         messagebox.showerror("Error-", "Introduce el indice\nque quieres actualizar!")
 
