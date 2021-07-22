@@ -20,16 +20,13 @@ root = Tk()
 n1 = DoubleVar()
 n2 = DoubleVar()
 r = DoubleVar()
-locale.setlocale(locale.LC_ALL, 'es-MX')
-dt = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-fecha = dt.strftime("%d/%m/%y")
-hora =  dt.strftime("%I:%M:%S")
 conexion = sqlite3.connect("PythonEjercicio.db")
 cursor = conexion.cursor()
 root.title("PythonEjercicio")
 root.config(cursor="plus",relief="ridge",bd=15)
 root.resizable(0,0)
-
+texto = StringVar()
+texto.set("")
 
 
 def calculadora():
@@ -41,6 +38,13 @@ def calculadora():
     entryPass.grid_remove()
     acc.grid_remove()
     sal.grid_remove()
+
+
+    label = Label(root, text="Usuario:",font=("Arial Bold", 10))
+    label.grid(column=1, row=0, padx=5, pady=5)
+    label.config(textvariable=texto )
+
+
 
     numero1 = Label(root, text="\nNumero 1       ",font=("Arial Bold", 10))
     numero1.grid(row=3, column=0, padx=5, pady=5, sticky="se")
@@ -81,12 +85,15 @@ def calculadora():
     salr = Button(root, text="Salir", command=salirAplicacion,font=("Arial Bold", 10))
     salr .grid(row=4,column=5, padx=5, pady=5, sticky="w")
     entryNum.focus()
+    n1.set('')
+    n2.set('')
+    r.set('')
 def borrar():
     n1.set('')
     n2.set('')
 def sumar():
     try:
-        r.set( n1.get()  + n2.get() ) 
+        r.set(  float(n1.get())  + float(n2.get()) )
         global operacion
         operacion = "+"
         commit()
@@ -103,7 +110,7 @@ def sumar():
         
 def restar():
     try:
-        r.set(  n1.get()  - n2.get() )
+        r.set(  float(n1.get())  - float(n2.get()) )
         global operacion
         operacion = "-"
         commit()
@@ -118,7 +125,7 @@ def restar():
 
 def multiplicar():
     try:
-        r.set(  n1.get() ) * n2.get() 
+        r.set(  float(n1.get())  * float(n2.get()) )
         global operacion
         operacion = "*"
         commit()
@@ -133,7 +140,7 @@ def multiplicar():
 
 def dividir():
     try:
-        r.set(  n1.get()  / n2.get() ) 
+        r.set(  float(n1.get())  / float(n2.get()) )
         global operacion
         operacion = "/"
         commit()
@@ -177,7 +184,10 @@ def salirAplicacion():
     valor=messagebox.askquestion("Salir","¿Deseas salir de la aplicacion?")
     if valor=="yes":
         root.destroy()
-        raiz.destroy()
+        try:
+            raiz.destroy()
+        except:
+            pass
 def acceder():
      
     Usr = entryUsr.get()
@@ -185,7 +195,7 @@ def acceder():
     cursor.execute('''SELECT * FROM usuarios WHERE nombre = ? AND contraseña = ? ''',(Usr, Pass))
     
     if cursor.fetchone():
-        texto.set("Los datos son correctos!")
+        texto.set("Calculadora")
         calculadora()
     else:
     	mesg.set("Los datos son incorrectos!")
@@ -194,7 +204,12 @@ def acceder():
     conexion.commit()
 
 def commit():
- 
+    locale.setlocale(locale.LC_ALL, 'es-MX')
+    dt = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+    fecha = dt.strftime("%d/%m/%y")
+    hora =  dt.strftime("%I:%M:%S")
+
+
     resultado = r.get()
     num1 = str(n1.get())
     num2 = str(n2.get())
@@ -246,14 +261,6 @@ def inicio():
     entryPass.grid(row=4, padx=5, pady=5)
     entryPass.config(justify="center", show="*")
 
-    global texto
-    texto = StringVar()
-    texto.set("")
-    label = Label(root, text="Usuario:",font=("Arial Bold", 10))
-    label.grid(column=1, row=0, padx=5, pady=5)
-    label.config(textvariable=texto )
-
-
     global button_acceder
     button_acceder = StringVar()
     button_acceder.set("Acceder")
@@ -275,8 +282,8 @@ def ConexionBDU():
     try:
         cursor.execute('''CREATE TABLE "usuarios"  
                         ("ID"	INTEGER NOT NULL UNIQUE,
-                        "nombre"	VARCHAR(16) NOT NULL,
-                        "contraseña"	VARCHAR(16) NOT NULL,
+                        "nombre"	VARCHAR(16) NOT NULL UNIQUE,
+                        "contraseña"	VARCHAR(16) NOT NULL UNIQUE,
                         PRIMARY KEY("ID" AUTOINCREMENT))''') 
 
         
@@ -298,12 +305,11 @@ def ConexionBDU():
         pass
 def ventanaDeDatos():
     global datos
-    cursor.execute("SELECT * FROM logs")
-    rows = cursor.fetchall()    
     datos = tkinter.Tk()
     datos.title("Hoja de datos")
     tree = ttk.Treeview(datos, column=("c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"), show='headings')
-    for row in rows:
+    
+    for row in cursor.execute("SELECT * FROM logs"):
         tree.insert("", tkinter.END, values=row)   
     tree.column("#1", anchor=tkinter.CENTER, width=25)
         
@@ -357,50 +363,64 @@ def actualizarHojaDeDatos():
 
     
 def crearRegistro():
-    result()
-    try:
-        if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
-            datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
-            cursor.execute("INSERT INTO logs VALUES(NULL,?,?,?,?,?,?,?)", (datos))
-            conexion.commit()
-            messagebox.showinfo("BBDD","Registro insertado con éxito")
-        else:
+    if e2.get().isdigit() and e4.get().isdigit():
+        result()
+        try:
+            if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
+                datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
+                cursor.execute("INSERT INTO logs VALUES(NULL,?,?,?,?,?,?,?)", (datos))
+                conexion.commit()
+                messagebox.showinfo("BBDD","Registro insertado con éxito")
+            else:
+                messagebox.showerror("Error-", "Introduce todos los campos!")
+        except:
             messagebox.showerror("Error-", "Introduce todos los campos!")
-    except:
-        messagebox.showerror("Error-", "Introduce todos los campos!")
-
+    else:
+        messagebox.showerror("Error-", "Introduce bien los campos!")
 def result():
     global resultadoAuto
     if e3.get() == " + ":
-        resultadoAuto = float(e2.get()) + float(e4.get())
-        if resultadoAuto != float(e5.get()):
-            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+            valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+            if valor == "yes":
+                resultadoAuto = float(e2.get()) + float(e4.get())
+            else:
+                resultadoAuto = float(e5.get())
         else:
-            pass
-    elif e3.get() == " - ":
-        resultadoAuto = float(e2.get()) - float(e4.get())
-        if resultadoAuto != float(e5.get()):
-            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+            resultadoAuto = float(e5.get())
+    if e3.get() == " - ":
+        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+            valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+            if valor == "yes":
+                resultadoAuto = float(e2.get()) - float(e4.get())
+            else:
+                resultadoAuto = float(e5.get())
         else:
-            pass
-    elif e3.get() == " x ":
-        resultadoAuto = float(e2.get()) * float(e4.get())
-        if resultadoAuto != float(e5.get()):
-            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+            resultadoAuto = float(e5.get())
+    if e3.get() == " x ":
+        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+            valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+            if valor == "yes":
+                resultadoAuto = float(e2.get()) * float(e4.get())
+            else:
+                resultadoAuto = float(e5.get())
         else:
-            pass
-    elif e3.get() == " / ":
-        resultadoAuto = float(e2.get()) / float(e4.get())
-        if resultadoAuto != float(e5.get()):
-            messagebox.showinfo("Atencion!", "El resultado que pusiste esta mal\nSe pondra el resultado correcto!")
+            resultadoAuto = float(e5.get())
+    if e3.get() == " / ":
+        if float(e2.get()) + float(e4.get()) != float(e5.get()):
+            valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+            if valor == "yes":
+                resultadoAuto = float(e2.get()) / float(e4.get())
+            else:
+                resultadoAuto = float(e5.get())
         else:
-            pass
+            resultadoAuto = float(e5.get())
 
 
 def actualizar():
-    result()
     if e1.get():    
         if e2.get().isdigit() and e4.get().isdigit():
+            result()
             cursor.execute("SELECT * FROM usuarios WHERE ID="+ e1.get())
             if cursor.fetchone() != None:
                  messagebox.showerror("Error-", "El indice no existe!")
@@ -513,7 +533,7 @@ def CRUD():
     l8.grid(column=0, row=9, sticky="e")
     
     global e8
-    e8=Button(raiz, text=" Selecciona una fecha ", command=calendario,font=("Arial Bold", 10))
+    e8=Button(raiz, text="Seleccionar fecha", command=calendario,font=("Arial Bold", 10))
     e8.grid(column=1, row=9, sticky="e")
     
     b1=Button(raiz, text="Create", command=crearRegistro,font=("Arial Bold", 10))
@@ -577,7 +597,7 @@ def calendario():
 
     cal = Calendar(fecha, selectmode = 'day',
                 year = 2021, month = 7,
-                day = 19)
+                day = 19,font=("Arial Bold", 10))
     
     cal.grid(row=0 , column=0)
     def salirCalendario():
