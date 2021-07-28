@@ -909,6 +909,7 @@ def salirAplicacion():
             fecha.destroy()
         except:
             pass
+# a
 inicio()
 root.mainloop() 
 conexion.close()
