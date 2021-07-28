@@ -5,10 +5,17 @@ block_cipher = None
 
 
 a = Analysis(['PythonEjercicio4.py'],
+<<<<<<< HEAD
              pathex=['C:\\Users\\dockt\\OneDrive - Alee\\proyectos\\PythonEjercicio\\test\\test1\\PythonEjercicio\\PythonEjercicio3.0'],
              binaries=[],
              datas=[],
              hiddenimports=['babel.numbers'],
+=======
+             pathex=['C:\\Users\\dockt\\OneDrive - Alee\\proyectos\\PythonEjercicio4'],
+             binaries=[],
+             datas=[],
+             hiddenimports=[],
+>>>>>>> b07f8b69581f83204b5c7f28e512d663d251a2ab
              hookspath=[],
              hooksconfig={},
              runtime_hooks=[],
