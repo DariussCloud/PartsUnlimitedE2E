@@ -27,7 +27,7 @@ texto.set("")
 newTime = None
 newDate = None
 resultadoAuto  = None
-
+run = False
 def inicio():
     vncmd = (root.register(on_validateN),'%S', '%P')
 
@@ -98,8 +98,10 @@ def crearCuenta():
         return mesg.set("Los campos\nson obligatorios")
     elif len(Usr) < 4:
         return mesg.set("El nombre de\nusuario es muy corto\nMinimo 4 caracteres")
-    elif len(Pass) < 4:
-        return mesg.set("La contraseña\nes muy corta\nMinimo 4 caracteres")
+    elif len(Pass) < 6:
+        return mesg.set("La contraseña\nes muy corta\nMinimo 6 caracteres")
+    elif Usr == Pass:
+        return mesg.set('No puedes usar\nel nombre de\ncontraseña')
     else:
         try:
             data = [Usr, Pass]
@@ -177,6 +179,8 @@ def sumar():
         commit()
         borrar()
         texto.set('se ha sumado correctamente')
+        if run:
+            actualizarHojaDeDatos()
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
@@ -192,6 +196,8 @@ def restar():
         commit()
         borrar()
         texto.set('se ha restado correctamente')
+        if run:
+            actualizarHojaDeDatos()
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
@@ -207,6 +213,8 @@ def multiplicar():
         commit()
         borrar()
         texto.set('se ha multiplicado correctamente')
+        if run:
+            actualizarHojaDeDatos()
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
@@ -223,6 +231,8 @@ def dividir():
             commit()
             borrar()
             texto.set('se ha dividido correctamente')
+            if run:
+                actualizarHojaDeDatos()
         else:
             texto.set("Error-\nNo se puede dividir entre cero!")
     except ValueError:
@@ -429,6 +439,8 @@ def CRUD():
     raiz.mainloop() 
 
 def ventanaDeDatos():
+    global run
+    run = True
     b2.config(state=DISABLED)
     global datos
     datos = tkinter.Tk()
@@ -469,7 +481,9 @@ def ventanaDeDatos():
     
     tree.heading("#8", text="Fecha")
     def salirHojaDeDatos():
+        global run
         datos.destroy()
+        run = False
         try:
             b2.config(state=NORMAL)
         except:
@@ -509,6 +523,8 @@ def crearRegistro():
                                     limpiar()
                                     e3.config(state="readonly")
                                     e6.config(state="readonly")
+                                    if run:
+                                        actualizarHojaDeDatos()
                                 else:
                                     messagebox.showerror("Error-", "Introduce la fecha!")
                             else:
@@ -547,6 +563,8 @@ def actualizar():
                                             limpiar()
                                             e3.config(state="readonly")
                                             e6.config(state="readonly")
+                                            if run:
+                                                actualizarHojaDeDatos()
                                         else:
                                             messagebox.showerror("Error-", "Introduce una fecha!") 
                                     else:
@@ -573,9 +591,12 @@ def borrarDatos():
     if e1.get():
         cursor.execute("SELECT * FROM logs WHERE ID="+ e1.get())
         if cursor.fetchone() != None:
-            cursor.execute("DELETE FROM logs WHERE ID=" + e1.get())
-            conexion.commit()
-            messagebox.showinfo("BBDD","Registro borrado con éxito")
+            r = messagebox.askyesno("Confirmar", "Estas seguro que\nquieres eliminar este registro?")
+            if r:
+                cursor.execute("DELETE FROM logs WHERE ID=" + e1.get())
+                conexion.commit()
+                messagebox.showinfo("BBDD","Registro borrado con éxito")
+                limpiar()
         else:
             messagebox.showerror("Error-", "El indice no existe")
 
@@ -587,46 +608,51 @@ def result():
     try:
         global resultadoAuto
         resultadoAuto = None
-        if e3.get() == "+":
-            if float(e2.get()) + float(e4.get()) != float(e5.get()):
-                valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
-                if valor == "yes":
-                    resultadoAuto = float(e2.get()) + float(e4.get())
+        if float(e2.get()) == 0 and e3.get() == "/":
+            return messagebox.showerror("Error-", "No se puede dividir entre cero")
+        else:
+            if e3.get() == "+":
+                if float(e2.get()) + float(e4.get()) != float(e5.get()):
+                    valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+                    if valor == "yes":
+                        resultadoAuto = float(e2.get()) + float(e4.get())
+                    else:
+                        resultadoAuto = float(e5.get())
                 else:
                     resultadoAuto = float(e5.get())
-            else:
-                resultadoAuto = float(e5.get())
-        elif e3.get() == "-":
-            if float(e2.get()) - float(e4.get()) != float(e5.get()):
-                valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
-                if valor == "yes":
-                    resultadoAuto = float(e2.get()) - float(e4.get())
+            elif e3.get() == "-":
+                if float(e2.get()) - float(e4.get()) != float(e5.get()):
+                    valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+                    if valor == "yes":
+                        resultadoAuto = float(e2.get()) - float(e4.get())
+                    else:
+                        resultadoAuto = float(e5.get())
                 else:
                     resultadoAuto = float(e5.get())
-            else:
-                resultadoAuto = float(e5.get())
-        elif e3.get() == "x":
-            if float(e2.get()) * float(e4.get()) != float(e5.get()):
-                valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
-                if valor == "yes":
-                    resultadoAuto = float(e2.get()) * float(e4.get())
+            elif e3.get() == "x":
+                if float(e2.get()) * float(e4.get()) != float(e5.get()):
+                    valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+                    if valor == "yes":
+                        resultadoAuto = float(e2.get()) * float(e4.get())
+                    else:
+                        resultadoAuto = float(e5.get())
                 else:
                     resultadoAuto = float(e5.get())
-            else:
-                resultadoAuto = float(e5.get())
-        elif e3.get() == "/":
-            if float(e2.get()) / float(e4.get()) != float(e5.get()):
-                valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
-                if valor == "yes":
-                    resultadoAuto = float(e2.get()) / float(e4.get())
+            elif e3.get() == "/":
+                if float(e2.get()) / float(e4.get()) != float(e5.get()):
+                    valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
+                    if valor == "yes":
+                        resultadoAuto = float(e2.get()) / float(e4.get())
+                    else:
+                        resultadoAuto = float(e5.get())
                 else:
                     resultadoAuto = float(e5.get())
-            else:
-                resultadoAuto = float(e5.get())
     except NameError:
         return messagebox.showerror("Error-", "Introduce un signo!")
     except ValueError:
         return messagebox.showerror("Error-", "Introduce bien los campos!")
+    except ZeroDivisionError:
+        return messagebox.showerror("Error-", "No se puede dividir entre cero")
 
 def limpiar():
 
@@ -658,7 +684,7 @@ def limpiar():
         e2=Entry(raiz,validate="key", validatecommand=vfcmd)
         e2.grid(column=1, row=3, sticky="w")
 
-        e3=ttk.Combobox(raiz, justify="center",width=3, values=[" + ", " - ", " x ", " / "])
+        e3=ttk.Combobox(raiz, justify="center",width=2, values=["+", "-", "x", "/"])
         e3.grid(column=1, row=4, sticky="w")
     
         e4=Entry(raiz,validate="key", validatecommand=vfcmd)
@@ -667,7 +693,7 @@ def limpiar():
         e5=Entry(raiz,validate="key", validatecommand=vfcmd)
         e5.grid(column=1, row=6, sticky="w")
 
-        e6=ttk.Combobox(raiz, justify="left",width=10)
+        e6=ttk.Combobox(raiz, justify="left",width=12)
         e6['values']=usrList
         e6.grid(column=1, row=7, sticky="w")
     limpiar2()
@@ -681,10 +707,16 @@ def selHora():
     hora.config(cursor="hand1",relief="ridge",bd=15)
 
 
-   
+    def cancelHora():
+        hora.destroy()
+        try:
+            b7.config(state=NORMAL)
+        except:
+            pass
 
 
-    def display_msg():
+    def confirmarHora():
+        confirmarButton.config(state=DISABLED)
         global newTime
         m = min_sb.get()
         h = sec_hour.get()
@@ -702,8 +734,10 @@ def selHora():
             except:
                 pass
         else:
-            pass
-    
+            try:
+                confirmarButton.config(state=NORMAL)
+            except:
+                pass
     fone = Frame(hora)
     ftwo = Frame(hora)
 
@@ -754,17 +788,28 @@ def selHora():
         )
     msg.pack(side=TOP)
 
-    actionBtn =Button(
+    confirmarButton =Button(
         hora,
         text="Confirmar",
         font=("Arial Bold", 10),
         padx=5,
 
-        command=display_msg
+        command=confirmarHora
     )
-    actionBtn.pack(pady=10)
+    confirmarButton.pack(side=RIGHT, pady=10, padx=20)
 
-    hora.protocol("WM_DELETE_WINDOW", display_msg)
+    cancelButton =Button(
+        hora,
+        text="Cancelar",
+        font=("Arial Bold", 10),
+        padx=5,
+
+        command=cancelHora
+    )
+    cancelButton.pack(pady=10, padx=20, side=LEFT)
+
+
+    hora.protocol("WM_DELETE_WINDOW", confirmarHora)
     hora.mainloop()
 
 def calendario():
@@ -772,7 +817,7 @@ def calendario():
     global fecha 
     fecha = tkinter.Tk()
     fecha.title("Fecha")
-    fecha.geometry("262x255")
+    fecha.geometry("262x245")
     global newDate
 
     cal = Calendar(fecha, locale="es_MX",  selectmode = 'day',
@@ -784,7 +829,15 @@ def calendario():
                 maxdate=datetime.date(year=2022, month=12, day=31))
     
     cal.grid(row=0 , column=0)
-    def salirCalendario():
+    def cancelCalendario():
+        fecha.destroy()
+        try:
+            b8.config(state=NORMAL)
+        except:
+            pass
+
+    def confirmarCalendario():
+        bc.config(state=DISABLED)
         t = "La fecha seleccionada es {}.\nEs correcto?".format(cal.get_date())
         v = messagebox.askyesno("Confirmar", t)
         if v:
@@ -799,15 +852,21 @@ def calendario():
             except:
                 pass
         else:
-            pass
-
+            try:
+                bc.config(state=NORMAL)
+            except:
+                pass
         
-    Button(fecha, text = "    Confirmar    ",
-        command = salirCalendario,font=("Arial Bold", 10)).grid(pady=5)
+    bc = Button(fecha, text = "Confirmar",width=10,
+        command = confirmarCalendario,font=("Arial Bold", 10))
+    bc.place(x=126, y=182)
+    Button(fecha, text = "Cancelar", width=10,
+        command = cancelCalendario,font=("Arial Bold", 10)).place(x=15, y=182)
+
 
     fecha.config(cursor="hand1",relief="ridge",bd=15)
     fecha.resizable(0,0)
-    fecha.protocol("WM_DELETE_WINDOW", salirCalendario)
+    fecha.protocol("WM_DELETE_WINDOW", confirmarCalendario)
 
     fecha.mainloop() 
 
@@ -850,7 +909,6 @@ def salirAplicacion():
             fecha.destroy()
         except:
             pass
-
 inicio()
 root.mainloop() 
 conexion.close()
