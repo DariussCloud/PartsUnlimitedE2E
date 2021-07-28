@@ -20,14 +20,17 @@ r = DoubleVar()
 conexion = sqlite3.connect("PythonEjercicio.db")
 cursor = conexion.cursor()
 root.title("PythonEjercicio")
-root.config(cursor="plus",relief="ridge",bd=15)
+root.config(cursor="hand1",relief="ridge",bd=15)
 root.resizable(0,0)
 texto = StringVar()
 texto.set("")
 newTime = None
 newDate = None
+resultadoAuto  = None
 
 def inicio():
+    vncmd = (root.register(on_validateN),'%S', '%P')
+
     ConexionBDU()
     global mesg
     mesg = StringVar()
@@ -45,7 +48,7 @@ def inicio():
     labelUsr.config(justify="center")
 
     global entryUsr
-    entryUsr = Entry(root)
+    entryUsr = Entry(root,validate="key", validatecommand=vncmd)
     entryUsr.grid(row=2, padx=5, pady=5)
     entryUsr.config(justify="center", state="normal")
 
@@ -56,7 +59,7 @@ def inicio():
     
     
     global entryPass
-    entryPass = Entry(root)
+    entryPass = Entry(root,validate="key", validatecommand=vncmd)
     entryPass.grid(row=4, padx=5, pady=5)
     entryPass.config(justify="center", show="*")
 
@@ -84,7 +87,7 @@ def acceder():
         texto.set("Calculadora")
         calculadora()
     else:
-    	mesg.set("Los datos son incorrectos!")
+    	mesg.set("Los datos son\nincorrectos!")
     conexion.commit()
 
 def crearCuenta():
@@ -92,15 +95,11 @@ def crearCuenta():
     Pass = entryPass.get()
 
     if len(Usr) == 0 or len(Pass) == 0:
-        return mesg.set("Los campos son obligatorios")
+        return mesg.set("Los campos\nson obligatorios")
     elif len(Usr) < 4:
-        return mesg.set("El nombre de usuario es muy corto\nMinimo 4 caracteres")
-    elif len(Usr) > 16:
-        return mesg.set("El nombre de usuario es muy largo\nMaximo 16 caracteres")
+        return mesg.set("El nombre de\nusuario es muy corto\nMinimo 4 caracteres")
     elif len(Pass) < 4:
-        return mesg.set("La contraseña es muy corta\nMinimo 4 caracteres")
-    elif len(Pass) > 16:
-        return mesg.set("La contraseña es muy larga\nMaximo 16 caracteres")
+        return mesg.set("La contraseña\nes muy corta\nMinimo 4 caracteres")
     else:
         try:
             data = [Usr, Pass]
@@ -120,9 +119,9 @@ def calculadora():
     acc.grid_remove()
     sal.grid_remove()
 
-    vfcmd = (root.register(on_validateF), '%P')
+    vfcmd = (root.register(on_validateF),'%S','%P')
 
-    label = Label(root, text="Usuario:",font=("Arial Bold", 10))
+    label = Label(root,font=("Arial Bold", 10))
     label.grid(column=1, row=0, padx=5, pady=5)
     label.config(textvariable=texto )
 
@@ -158,9 +157,9 @@ def calculadora():
     
     entre = Button(root, text="/", command=dividir,font=("Arial Bold", 10))
     entre.grid(row=4,column=4, padx=5, pady=5, sticky="e", ipadx=8, ipady=5)
-    
-    Vlogs = Button(root, text="Editar", command=CRUD,font=("Arial Bold", 10))
-    Vlogs.grid(row=3,column=5, padx=5, pady=5, sticky="w")
+    global bEdit
+    bEdit = Button(root, text="Editar", command=CRUD,font=("Arial Bold", 10))
+    bEdit.grid(row=3,column=5, padx=5, pady=5, sticky="w")
     
     salr = Button(root, text="Salir", command=salirAplicacion,font=("Arial Bold", 10))
     salr .grid(row=4,column=5, padx=5, pady=5, sticky="w")
@@ -217,12 +216,15 @@ def multiplicar():
 
 def dividir():
     try:
-        r.set(  float(n1.get())  / float(n2.get()) )
-        global operacion
-        operacion = "/"
-        commit()
-        borrar()
-        texto.set('se ha dividido correctamente')
+        if float(n1.get()) != 0:
+            r.set(  float(n1.get())  / float(n2.get()) )
+            global operacion
+            operacion = "/"
+            commit()
+            borrar()
+            texto.set('se ha dividido correctamente')
+        else:
+            texto.set("Error-\nNo se puede dividir entre cero!")
     except ValueError:
         texto.set("Error-\ningresa los campos correctamente")
     except ZeroDivisionError:
@@ -262,17 +264,17 @@ def ConexionBDU():
     try:
         cursor.execute('''CREATE TABLE "usuarios"  
                         ("ID"	INTEGER NOT NULL UNIQUE,
-                        "nombre"	VARCHAR(16) NOT NULL UNIQUE,
-                        "contraseña"	VARCHAR(16) NOT NULL UNIQUE,
+                        "nombre"	VARCHAR(17) NOT NULL UNIQUE,
+                        "contraseña"	VARCHAR(17) NOT NULL UNIQUE,
                         PRIMARY KEY("ID" AUTOINCREMENT))''') 
 
         cursor.execute("""CREATE TABLE "logs" (
         "ID"	INTEGER NOT NULL UNIQUE,
-        "Numero1"	VARCHAR(100) NOT NULL,
-        "Operacion"	VARCHAR(5) NOT NULL,
-        "Numero2"	VARCHAR(100) NOT NULL,
-        "Resultado"	VARCHAR(100) NOT NULL,
-        "Usuario"	VARCHAR(50) NOT NULL,
+        "Numero1"	VARCHAR(10) NOT NULL,
+        "Operacion"	VARCHAR(1) NOT NULL,
+        "Numero2"	VARCHAR(10) NOT NULL,
+        "Resultado"	VARCHAR(10) NOT NULL,
+        "Usuario"	VARCHAR(17) NOT NULL,
         "Hora"	VARCHAR(10) NOT NULL,
         "Fecha"	VARCHAR(10) NOT NULL,
         PRIMARY KEY("ID" AUTOINCREMENT)
@@ -283,6 +285,28 @@ def ConexionBDU():
         pass
 
 def CRUD():
+    
+    def wLog():
+        if e1.get():
+            cursor.execute("SELECT * FROM logs WHERE ID="+ e1.get())
+            if cursor.fetchone() != None:
+                id =  e1.get()
+                limpiar()
+                for log in cursor.execute("SELECT * FROM logs WHERE ID="+id):
+                    e1.insert(0,log[0])
+                    e2.insert(0,log[1])
+                    e3.insert(0,log[2])
+                    e4.insert(0,log[3])
+                    e5.insert(0,log[4])
+                    e6.insert(0,log[5])
+                e3.config(state="readonly")
+                e6.config(state="readonly")
+            else:
+                messagebox.showerror("Error-", "El indice no existe!")
+        else:
+            messagebox.showerror("Error-", "Introduce un indice!")
+    
+    bEdit.config(state=DISABLED)
     global usrList
     usrList = [usr for usr in cursor.execute("SELECT nombre FROM usuarios")]
     global raiz
@@ -290,9 +314,9 @@ def CRUD():
     raiz.geometry("275x300")
     raiz.title("CRUD")
     raiz.resizable(0, 0)
-    vcmd = (raiz.register(on_validate), '%P')
-    vfcmd = (raiz.register(on_validateF), '%P')
-    Label(raiz, text="   Editor de datos",font=("Arial Bold", 10)).grid(column=1, row=0, sticky="w")
+    vcmd = (raiz.register(on_validate),'%S', '%P')
+    vfcmd = (raiz.register(on_validateF),'%S', '%P')
+    Label(raiz, text="Editor de datos",font=("Arial Bold", 10), relief="ridge", borderwidth=5).grid(column=1, row=0, sticky="w")
     menubar=Menu(raiz)
     menuSalir=Menu(menubar, tearoff=0)
     crud=Menu(menubar, tearoff=0)
@@ -313,7 +337,7 @@ def CRUD():
     menubar.add_cascade(label="Salir", menu=menuSalir)
 
 
-    raiz.config(cursor="plus",relief="ridge",bd=15, menu=menubar)
+    raiz.config(cursor="hand1",relief="ridge",bd=15, menu=menubar)
 
     l1=Label(raiz, text="ID:",font=("Arial Bold", 10))
     l1.grid(column=0, row=2, sticky="e")
@@ -335,7 +359,7 @@ def CRUD():
     l3.grid(column=0, row=4, sticky="e")
     
     global e3
-    e3=ttk.Combobox(raiz, justify="center",width=3, values=[" + ", " - ", " x ", " / "],state="readonly")
+    e3=ttk.Combobox(raiz, justify="center",width=2, values=["+", "-", "x", "/"],state="readonly")
     e3.grid(column=1, row=4, sticky="w")
     
     global l4
@@ -359,7 +383,7 @@ def CRUD():
     l6.grid(column=0, row=7, sticky="e")
 
     global e6
-    e6=ttk.Combobox(raiz, justify="left",width=10,state="readonly")
+    e6=ttk.Combobox(raiz, justify="left",width=12,state="readonly")
     e6['values']=usrList
     e6.grid(column=1, row=7, sticky="w")
     
@@ -371,9 +395,11 @@ def CRUD():
     l8=Label(raiz, text="Fecha:",font=("Arial Bold", 10))
     l8.grid(column=0, row=9, sticky="e")
     
-    global e8
-    e8=Button(raiz, text="Seleccionar fecha", command=calendario,font=("Arial Bold", 10))
-    e8.grid(column=1, row=9, sticky="e")
+    global b8
+    global b7
+    global b2
+    b8=Button(raiz, text="Seleccionar fecha", command=calendario,font=("Arial Bold", 10))
+    b8.grid(column=1, row=9, sticky="e")
     
     b1=Button(raiz, text="Create", command=crearRegistro,font=("Arial Bold", 10))
     b1.place(x=0,y=242)
@@ -392,12 +418,18 @@ def CRUD():
 
     b7=Button(raiz, text="Seleccionar hora", command=selHora,font=("Arial Bold", 10))
     b7.grid(column=1, row=8, sticky="w")
-
-    
+    def salirEdit():
+        try:
+            bEdit.config(state=NORMAL)
+            raiz.destroy()
+        except:
+            raiz.destroy()
     e1.focus()
+    raiz.protocol("WM_DELETE_WINDOW", salirEdit)
     raiz.mainloop() 
 
 def ventanaDeDatos():
+    b2.config(state=DISABLED)
     global datos
     datos = tkinter.Tk()
     datos.title("Hoja de datos")
@@ -436,7 +468,12 @@ def ventanaDeDatos():
     tree.column("#8", anchor=tkinter.CENTER, width=125)
     
     tree.heading("#8", text="Fecha")
-
+    def salirHojaDeDatos():
+        datos.destroy()
+        try:
+            b2.config(state=NORMAL)
+        except:
+            pass
     menubar=Menu(datos)
     menuOpciones=Menu(menubar, tearoff=0)
 
@@ -444,68 +481,92 @@ def ventanaDeDatos():
     menuOpciones.add_command(label="Salir", command=salirHojaDeDatos)
     menubar.add_cascade(label="Opciones", menu=menuOpciones)
 
-    datos.resizable(0, 0)
-    datos.config(cursor="plus",relief="ridge",bd=15, menu=menubar)      
-    tree.pack()  
 
-def salirHojaDeDatos():
-    datos.destroy()
+    datos.resizable(0, 0)
+    datos.config(cursor="hand1",relief="ridge",bd=15, menu=menubar)   
+    datos.protocol("WM_DELETE_WINDOW",salirHojaDeDatos)
+   
+    tree.pack()  
 
 def actualizarHojaDeDatos():
     datos.destroy()
     ventanaDeDatos()
 
 def crearRegistro():
-    if e2.get().isdigit() and e4.get().isdigit() and e5.get().isdigit():
-        result()
-        try:
-            if e2.get() and e3.get() and e4.get() and resultadoAuto and e6.get() and newTime and newDate:
-                datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
-                cursor.execute("INSERT INTO logs VALUES(NULL,?,?,?,?,?,?,?)", (datos))
-                conexion.commit()
-                messagebox.showinfo("BBDD","Registro insertado con éxito")
+    if e2.get():
+        if e3.get():
+            if e4.get():
+                if e5.get():
+                    result()
+                    if e6.get():
+                        if resultadoAuto != None:
+                            if newTime:
+                                if newDate:
+                                    datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
+                                    cursor.execute("INSERT INTO logs VALUES(NULL,?,?,?,?,?,?,?)", (datos))
+                                    conexion.commit()
+                                    messagebox.showinfo("BBDD","Registro insertado con éxito")
+                                    limpiar()
+                                    e3.config(state="readonly")
+                                    e6.config(state="readonly")
+                                else:
+                                    messagebox.showerror("Error-", "Introduce la fecha!")
+                            else:
+                                messagebox.showerror("Error-", "Introduce la hora!")
+                        else:
+                            pass
+                    else:
+                        messagebox.showerror("Error-", "Introduce el usuario!") 
+                else:
+                    messagebox.showerror("Error-", "Introduce el resultado!")
             else:
-                messagebox.showerror("Error-", "Introduce todos los campos!")
-        except:
-            messagebox.showerror("Error-", "Introduce todos los campos!")
+                messagebox.showerror("Error-", "Introduce el segundo numero!")
+        else:
+                messagebox.showerror("Error-", "Introduce el signo!")
     else:
-        messagebox.showerror("Error-", "Introduce bien los campos!")
+        messagebox.showerror("Error-", "Introduce el primer numero!")
 
 def actualizar():
     if e1.get():
         cursor.execute("SELECT * FROM logs WHERE ID="+ e1.get())
         if cursor.fetchone() != None:
-            if e2.get().isdigit():
+            if e2.get():
                 if e3.get():
-                    if e4.get().isdigit():
+                    if e4.get():
                         if e5.get():
                             result()
                             if e6.get():
-                                if newTime != None:
-                                    if newDate != None:
-                                        datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
-                                        cursor.execute("UPDATE logs SET Numero1=?, Operacion=?, Numero2=?, Resultado=?, Usuario=?, Hora=?, Fecha=? "+
-                                        "WHERE ID=" + e1.get(),(datos))
-                                        conexion.commit()
-                                        messagebox.showinfo("BBDD","Registro actualizado con éxito")
+                                if resultadoAuto != None:
+                                    if newTime != None:
+                                        if newDate != None:
+                                            datos=e2.get(),e3.get(),e4.get(),resultadoAuto,e6.get(),newTime,newDate
+                                            cursor.execute("UPDATE logs SET Numero1=?, Operacion=?, Numero2=?, Resultado=?, Usuario=?, Hora=?, Fecha=? "+
+                                            "WHERE ID=" + e1.get(),(datos))
+                                            conexion.commit()
+                                            messagebox.showinfo("BBDD","Registro actualizado con éxito")
+                                            limpiar()
+                                            e3.config(state="readonly")
+                                            e6.config(state="readonly")
+                                        else:
+                                            messagebox.showerror("Error-", "Introduce una fecha!") 
                                     else:
-                                        messagebox.showerror("Error-", "Introduce una fecha!")   
+                                        messagebox.showerror("Error-", "Introduce una hora!")
                                 else:
-                                    messagebox.showerror("Error-", "Introduce una hora!") 
+                                    pass
                             else:
                                 messagebox.showerror("Error-", "Introduce un usuario!")                                    
                         else:
                             messagebox.showerror("Error-", "Introduce un resultado!")                                    
                     else:
-                        messagebox.showerror("Error-", "Introduce bien\nel segundo numero!")                                    
+                        messagebox.showerror("Error-", "Introduce \nel segundo numero!")                                    
                 else:
                     messagebox.showerror("Error-", "Introduce un signo!")                                    
             else:
-                messagebox.showerror("Error-", "Introduce bien\nel primer numero!")                                    
+                messagebox.showerror("Error-", "Introduce \nel primer numero!")                                    
         else:
             messagebox.showerror("Error-", "El indice no existe!")                                    
     else:
-        messagebox.showerror("Error-", "Introduce el indice que quieres acutualizar!") 
+        messagebox.showerror("Error-", "Introduce el indice que quieres actualizar!") 
 
 def borrarDatos():
 
@@ -522,9 +583,11 @@ def borrarDatos():
         messagebox.showerror("Error-", "Introduce el indice\nque quieres eliminar!")
 
 def result():
+    
     try:
         global resultadoAuto
-        if e3.get() == " + ":
+        resultadoAuto = None
+        if e3.get() == "+":
             if float(e2.get()) + float(e4.get()) != float(e5.get()):
                 valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
                 if valor == "yes":
@@ -533,7 +596,7 @@ def result():
                     resultadoAuto = float(e5.get())
             else:
                 resultadoAuto = float(e5.get())
-        elif e3.get() == " - ":
+        elif e3.get() == "-":
             if float(e2.get()) - float(e4.get()) != float(e5.get()):
                 valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
                 if valor == "yes":
@@ -542,7 +605,7 @@ def result():
                     resultadoAuto = float(e5.get())
             else:
                 resultadoAuto = float(e5.get())
-        elif e3.get() == " x ":
+        elif e3.get() == "x":
             if float(e2.get()) * float(e4.get()) != float(e5.get()):
                 valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
                 if valor == "yes":
@@ -551,7 +614,7 @@ def result():
                     resultadoAuto = float(e5.get())
             else:
                 resultadoAuto = float(e5.get())
-        elif e3.get() == " / ":
+        elif e3.get() == "/":
             if float(e2.get()) / float(e4.get()) != float(e5.get()):
                 valor=messagebox.askquestion("Error-","El resultado que pusiste esta mal\nquieres que se ponga el resultado correcto automaticamente?")
                 if valor == "yes":
@@ -562,6 +625,8 @@ def result():
                 resultadoAuto = float(e5.get())
     except NameError:
         return messagebox.showerror("Error-", "Introduce un signo!")
+    except ValueError:
+        return messagebox.showerror("Error-", "Introduce bien los campos!")
 
 def limpiar():
 
@@ -571,7 +636,6 @@ def limpiar():
     e4.grid_forget()
     e5.grid_forget()
     e6.grid_forget()
-
     def limpiar2():
         global e1
         global e2
@@ -579,56 +643,46 @@ def limpiar():
         global e4
         global e5
         global e6
+        global resultadoAuto
+        global newDate
+        global newTime
 
-        e1=Entry(raiz)
+        resultadoAuto = None
+        newDate = None
+        newDate = None
+        vcmd = (raiz.register(on_validate),'%S', '%P')
+        vfcmd = (raiz.register(on_validateF),'%S', '%P')
+        e1=Entry(raiz,validate="key", validatecommand=vcmd)
         e1.grid(column=1, row=2, sticky="w")
 
-        e2=Entry(raiz)
+        e2=Entry(raiz,validate="key", validatecommand=vfcmd)
         e2.grid(column=1, row=3, sticky="w")
 
         e3=ttk.Combobox(raiz, justify="center",width=3, values=[" + ", " - ", " x ", " / "])
         e3.grid(column=1, row=4, sticky="w")
     
-        e4=Entry(raiz)
+        e4=Entry(raiz,validate="key", validatecommand=vfcmd)
         e4.grid(column=1, row=5, sticky="w")
 
-        e5=Entry(raiz)
+        e5=Entry(raiz,validate="key", validatecommand=vfcmd)
         e5.grid(column=1, row=6, sticky="w")
+
         e6=ttk.Combobox(raiz, justify="left",width=10)
         e6['values']=usrList
         e6.grid(column=1, row=7, sticky="w")
     limpiar2()
 
-def wLog():
-    if e1.get():
-        cursor.execute("SELECT * FROM logs WHERE ID="+ e1.get())
-        if cursor.fetchone() != None:
-            id =  e1.get()
-            limpiar()
-            for log in cursor.execute("SELECT * FROM logs WHERE ID="+id):
-                e1.insert(0,log[0])
-                e2.insert(0,log[1])
-                e3.insert(0,log[2])
-                e4.insert(0,log[3])
-                e5.insert(0,log[4])
-                e6.insert(0,log[5])
-            e3.config(state="readonly")
-            e6.config(state="readonly")
-        else:
-            messagebox.showerror("Error-", "El indice no existe!")
-    else:
-        messagebox.showerror("Error-", "Introduce un indice!")
- 
 def selHora():
-    ws = Tk()
-    ws.resizable(0,0)
-    ws.title("Hora")
-    ws.config(cursor="plus",relief="ridge",bd=15)
+    global hora
+    b7.config(state=DISABLED)
+    hora = Tk()
+    hora.resizable(0,0)
+    hora.title("Hora")
+    hora.config(cursor="hand1",relief="ridge",bd=15)
 
 
-    hour_string=StringVar()
-    min_string=StringVar()     
-    f = ('Times', 20)
+   
+
 
     def display_msg():
         global newTime
@@ -636,14 +690,22 @@ def selHora():
         h = sec_hour.get()
         s = sec.get()
         t = f"La hora seleccionada es {m}:{h}:{s}.\nEs correcto?"
-        res = messagebox.askquestion("?", t)
+        res = messagebox.askquestion("Confirmar", t)
         if res == "yes":
             newTime = f"{m}:{h}:{s}"
-            ws.destroy()
-
+            try:
+                hora.destroy()
+            except:
+                pass
+            try:
+                b7.config(state=NORMAL)
+            except:
+                pass
+        else:
+            pass
     
-    fone = Frame(ws)
-    ftwo = Frame(ws)
+    fone = Frame(hora)
+    ftwo = Frame(hora)
 
     fone.pack(pady=10)
     ftwo.pack(pady=10)
@@ -653,7 +715,6 @@ def selHora():
         from_=0,
         to=23,
         wrap=True,
-        textvariable=hour_string,
         width=2,
         state="readonly",
         font=("Arial Bold", 30),
@@ -665,7 +726,6 @@ def selHora():
         to=59,
         wrap=True,
         state="readonly",
-        textvariable=min_string,
         font=("Arial Bold", 30),
         width=2,
         justify=CENTER
@@ -688,14 +748,14 @@ def selHora():
     sec.pack(side=LEFT, fill=X, expand=True)
 
     msg = Label(
-        ws, 
+        hora, 
         text="  Hora        Minutos      Segundos",
         font=("Arial Bold", 10),
         )
     msg.pack(side=TOP)
 
     actionBtn =Button(
-        ws,
+        hora,
         text="Confirmar",
         font=("Arial Bold", 10),
         padx=5,
@@ -704,41 +764,70 @@ def selHora():
     )
     actionBtn.pack(pady=10)
 
-
-    ws.mainloop()
+    hora.protocol("WM_DELETE_WINDOW", display_msg)
+    hora.mainloop()
 
 def calendario():
+    b8.config(state=DISABLED)
     global fecha 
     fecha = tkinter.Tk()
     fecha.title("Fecha")
-    fecha.geometry("282x255")
+    fecha.geometry("262x255")
     global newDate
 
     cal = Calendar(fecha, locale="es_MX",  selectmode = 'day',
                 year = 2021, month = 7,
-                day = 19,font=("Arial Bold", 10))
+                day = 19,font=("Arial Bold", 10),
+                showothermonthdays=False,
+                showweeknumbers=False, 
+                mindate=datetime.date(year=2020, month=1, day=1), 
+                maxdate=datetime.date(year=2022, month=12, day=31))
     
     cal.grid(row=0 , column=0)
     def salirCalendario():
-        global newDate
-        newDate = cal.get_date()
-        fecha.destroy()
+        t = "La fecha seleccionada es {}.\nEs correcto?".format(cal.get_date())
+        v = messagebox.askyesno("Confirmar", t)
+        if v:
+            global newDate
+            newDate = cal.get_date()
+            try:
+                b8.config(state=NORMAL)
+            except:
+                pass
+            try:
+                fecha.destroy()
+            except:
+                pass
+        else:
+            pass
+
+        
     Button(fecha, text = "    Confirmar    ",
         command = salirCalendario,font=("Arial Bold", 10)).grid(pady=5)
 
-    fecha.config(cursor="plus",relief="ridge",bd=15)
+    fecha.config(cursor="hand1",relief="ridge",bd=15)
     fecha.resizable(0,0)
+    fecha.protocol("WM_DELETE_WINDOW", salirCalendario)
+
     fecha.mainloop() 
 
-def on_validateF(P):
-    if all(c in "0123456789." for c in P):
+def on_validateN(text, new_text):
+    if text.isalnum() and len(new_text) < 17:
         return True
-    return False
+    else:
+        return False
 
-def on_validate(P):
-    if all(c in "0123456789" for c in P):
+def on_validateF(text, new_text):
+    if all(c in "0123456789." for c in text) and len(new_text) < 10:
         return True
-    return False
+    else:
+        return False
+
+def on_validate(text, new_text):
+    if text.isdecimal() and len(new_text) < 3:
+        return True
+    else:
+        return False
 
 def salirAplicacion():
     
@@ -751,6 +840,14 @@ def salirAplicacion():
             pass
         try:
             datos.destroy()
+        except:
+            pass
+        try:
+            hora.destroy()
+        except:
+            pass
+        try:
+            fecha.destroy()
         except:
             pass
 
